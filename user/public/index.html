@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+
+</head>
+<body id="body">
+  <div id="app">
+  </div>
+  <!-- <h1>
+    firebase google authentication
+  </h1>
+
+  <button id="login">SignUp</button>
+  <button id="logout">LogOut</button>
+  <button id="register">Login</button>
+<button id="allUsers">AllUsers</button>
+
+  <h3>Name</h3>
+  <div id="name"></div>
+
+  <h3>email</h3>
+  <div id="email"></div>
+
+  <img src="" id="userProfile" alt="">
+
+<button id="fsignin">facebook</button>   -->
+
+<div class="container">
+  <p class="draggable" draggable="true">1</p>
+  <p class="draggable" draggable="true">2</p>
+</div>
+
+<div class="container">
+  <p class="draggable" draggable="true">3</p>
+  <p class="draggable" draggable="true">4</p>
+</div>
+
+</body>
+
+<script type="module">
+  import app from './app.js'
+      const {createApp} = Vue;
+      createApp(app).mount('#app');
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
+  import {signOut ,GoogleAuthProvider, getAuth, signInWithRedirect, getRedirectResult, signInWithPopup, onAuthStateChanged, FacebookAuthProvider } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7QDQ-bcd4RDZWRFMVgGli2JuYOGyPfoM",
+    authDomain: "userauthentication-61c32.firebaseapp.com",
+    projectId: "userauthentication-61c32",
+    storageBucket: "userauthentication-61c32.appspot.com",
+    messagingSenderId: "810507138965",
+    appId: "1:810507138965:web:c90f8285026700066d289c",
+    measurementId: "G-6Q9BL9D0ZY"
+  };
+
+
+let userName = ""
+let userEmail = ""
+  // Initialize Firebase
+  const aapp = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(aapp);
+  const auth = getAuth(aapp)
+  const provider = new GoogleAuthProvider(aapp)
+  const facebookProvider = new FacebookAuthProvider(aapp)
+  login.addEventListener('click', (e)=>{
+    console.log("Fired")
+    let SignUpname = ""
+    let SignUpemail = ""
+signInWithPopup(auth, provider)
+.then((result)=>{
+  const credential = GoogleAuthProvider.credentialFromResult(result);
+  const token = credential.accessToken;
+console.log("token", token);
+  
+  const user = result.user;
+  alert(user.displayName);
+  console.log("user -> ", user.providerData[0]);
+  
+  
+  userName = user.providerData[0].displayName;
+  userEmail = user.providerData[0].email
+
+  console.log(userName)
+  console.log(userEmail)
+
+
+  fetch('http://localhost:5001/user/signUp', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+  },
+    body: JSON.stringify({
+      name:userName,
+      email: userEmail
+    })
+  })
+  .then((response)=>response.json())
+  .then((data)=>{
+    
+    console.log("data", data.result)
+    
+    alert(data.message)
+    if(data.message == "user signed up successfully"){
+      document.querySelector("#login").style.backgroundColor="green"
+      document.querySelector("#login").style.color="white"
+      SignUpemail = data.result.name;
+    SignUpname = data.result.email;
+    console.log("data", SignUpname, SignUpemail)
+
+    document.querySelector("#name").innerHTML = SignUpname;
+    document.querySelector("#email").innerHTML = SignUpemail;
+    document.querySelector("#userProfile").src = user.photoURL;
+    }else{
+      document.querySelector("#login").style.backgroundColor="red"
+      document.querySelector("#login").style.color="white"
+      SignUpemail = "";
+    SignUpname = "";
+
+    document.querySelector("#name").innerHTML = "";
+  document.querySelector("#email").innerHTML = ""
+  document.querySelector("#userProfile").src = "";
+    }
+  })
+  .catch((error)=>console.log(error.message))
+
+})
+.catch((error)=>{
+  const errorCode = error.code;
+  const errorMessage = error.message;
+  const email = error.email;
+  const credential = GoogleAuthProvider.credentialFromError(error);
+
+  alert(errorMessage)
+})
+})
+
+
+logout.addEventListener('click', (e)=>{
+console.log("logout")
+signOut(auth).then(() => {
+  // Sign-out successful.
+}).catch((error) => {
+  // An error happened.
+});
+})
+
+
+register.addEventListener('click', e=>{
+  console.log("register")
+  console.log("Fired")
+signInWithPopup(auth, provider)
+.then((result)=>{
+  const credential = GoogleAuthProvider.credentialFromResult(result);
+  const token = credential.accessToken;
+console.log("token", token);
+
+  const user = result.user;
+  alert(user.displayName);
+  console.log("user -> ", user.providerData[0]);
+  userEmail = user.providerData[0].email
+
+
+  fetch('http://localhost:5001/user/signIn', {
+    credentials:"include",
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+  },
+    body: JSON.stringify({
+      email: userEmail
+    })
+  })
+  .then((response)=>response.json())
+  .then((data)=>{
+    alert(data.message)
+
+    if(data.message == "user Logged in successfully"){
+      document.querySelector("#register").style.backgroundColor="green"
+      document.querySelector("#register").style.color="white"
+
+
+
+      document.querySelector("#name").innerHTML = data.data[0].name;
+  document.querySelector("#email").innerHTML = user.providerData[0].email
+  document.querySelector("#userProfile").src = user.photoURL;
+    }else{
+      document.querySelector("#register").style.backgroundColor="red"
+      document.querySelector("#register").style.color="white"
+
+      document.querySelector("#name").innerHTML = "";
+  document.querySelector("#email").innerHTML = ""
+  document.querySelector("#userProfile").src = "";
+    }
+  })
+  .catch((error)=>console.log(error.message))
+
+})
+.catch((error)=>{
+  const errorCode = error.code;
+  const errorMessage = error.message;
+  const email = error.email;
+  const credential = GoogleAuthProvider.credentialFromError(error);
+
+  alert(errorMessage)
+})
+
+})
+
+
+allUsers.addEventListener('click', (e)=>{
+  fetch('http://localhost:5001/allUsers', {
+    // credentials:"include",
+    method: 'GET',
+    headers: {
+    'Content-Type': 'application/json',
+  }
+  })
+  .then((response)=>response.json())
+  .then((data)=>document.write(JSON.stringify(data.result)))
+  .catch((error)=>console.log(error.message))
+})
+
+</script>
+</html>
